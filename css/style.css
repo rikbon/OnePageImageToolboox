@@ -1,0 +1,25 @@
+/* Add custom styles here */
+
+.tool-container {
+    display: none;
+}
+
+.tool-container.active {
+    display: block;
+}
+
+#image-preview {
+    max-width: 100%;
+    margin-top: 1rem;
+}
+
+.drop-area {
+    border: 2px dashed #ccc;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+}
+
+.drag-over {
+    background-color: #f0f0f0;
+}

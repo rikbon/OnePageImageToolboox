@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Toolbox</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Image Toolbox</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="#" data-tool="resize">Resize</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-tool="convert">Convert</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-tool="crop">Crop</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-tool="rotate">Rotate & Flip</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-tool="filters">Filters</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-tool="text-overlay">Text Overlay</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-tool="color-adjustments">Color Adjustments</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-tool="bulk-resize">Bulk Resize</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div id="tool-container">
+            <!-- Resize Tool -->
+            <div id="resize-tool" class="tool-container">
+                <h3>Resize Image</h3>
+                <div class="mb-3 drop-area">
+                    <label for="file-input-resize" class="form-label">Select an image (or drop it here)</label>
+                    <input class="form-control" type="file" id="file-input-resize" accept="image/*">
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <img id="image-preview-resize" class="img-fluid"/>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="resize-preview-canvas" class="img-fluid"></canvas>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <label for="width-input" class="form-label">Width</label>
+                        <input type="number" class="form-control" id="width-input" placeholder="e.g., 800">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="height-input" class="form-label">Height</label>
+                        <input type="number" class="form-control" id="height-input" placeholder="e.g., 600">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="aspect-ratio-check" checked>
+                            <label class="form-check-label" for="aspect-ratio-check">Maintain aspect ratio</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button id="resize-btn" class="btn btn-primary">Resize</button>
+                    <a id="download-btn-resize" class="btn btn-success" style="display: none;">Download Image</a>
+                </div>
+            </div>
+
+            <!-- Convert Tool -->
+            <div id="convert-tool" class="tool-container">
+                <h3>Convert Image Format</h3>
+                <div class="mb-3 drop-area">
+                    <label for="file-input-convert" class="form-label">Select an image (or drop it here)</label>
+                    <input class="form-control" type="file" id="file-input-convert" accept="image/*">
+                </div>
+                <img id="image-preview-convert" class="img-fluid mt-3"/>
+                <div class="mb-3 mt-3">
+                    <label for="format-select" class="form-label">Convert to:</label>
+                    <select class="form-select" id="format-select">
+                        <option value="jpeg">JPEG</option>
+                        <option value="png">PNG</option>
+                        <option value="webp">WEBP</option>
+                    </select>
+                </div>
+                <div class="mt-3">
+                    <button id="convert-btn" class="btn btn-primary">Convert</button>
+                    <a id="download-btn-convert" class="btn btn-success" style="display: none;">Download Image</a>
+                </div>
+            </div>
+
+            <!-- Crop Tool -->
+            <div id="crop-tool" class="tool-container">
+                <h3>Crop Image</h3>
+                <div class="mb-3 drop-area">
+                    <label for="file-input-crop" class="form-label">Select an image (or drop it here)</label>
+                    <input class="form-control" type="file" id="file-input-crop" accept="image/*">
+                </div>
+                <div class="img-container">
+                    <img id="image-preview-crop" style="display: none; max-width: 100%;">
+                </div>
+                <div class="mt-3">
+                    <button id="crop-btn" class="btn btn-primary" style="display: none;">Crop</button>
+                    <a id="download-btn-crop" class="btn btn-success" style="display: none;">Download Image</a>
+                </div>
+            </div>
+
+            <!-- Rotate & Flip Tool -->
+            <div id="rotate-tool" class="tool-container">
+                <h3>Rotate & Flip Image</h3>
+                <div class="mb-3 drop-area">
+                    <label for="file-input-rotate" class="form-label">Select an image (or drop it here)</label>
+                    <input class="form-control" type="file" id="file-input-rotate" accept="image/*">
+                </div>
+                <canvas id="canvas-rotate" class="mt-3 img-fluid"></canvas>
+                <div class="mt-3">
+                    <button id="rotate-left-btn" class="btn btn-primary">Rotate Left</button>
+                    <button id="rotate-right-btn" class="btn btn-primary">Rotate Right</button>
+                    <button id="flip-horizontal-btn" class="btn btn-primary">Flip Horizontal</button>
+                    <button id="flip-vertical-btn" class="btn btn-primary">Flip Vertical</button>
+                </div>
+                <div class="mt-3">
+                    <a id="download-btn-rotate" class="btn btn-success" style="display: none;">Download Image</a>
+                </div>
+            </div>
+
+            <!-- Filters Tool -->
+            <div id="filters-tool" class="tool-container">
+                <h3>Image Filters</h3>
+                <div class="mb-3 drop-area">
+                    <label for="file-input-filters" class="form-label">Select an image (or drop it here)</label>
+                    <input class="form-control" type="file" id="file-input-filters" accept="image/*">
+                </div>
+                <canvas id="canvas-filters" class="mt-3 img-fluid"></canvas>
+                <div class="mt-3" id="filter-buttons">
+                    <button class="btn btn-secondary filter-btn" data-filter="grayscale">Grayscale</button>
+                    <button class="btn btn-secondary filter-btn" data-filter="sepia">Sepia</button>
+                    <button class="btn btn-secondary filter-btn" data-filter="invert">Invert</button>
+                    <button class="btn btn-secondary filter-btn" data-filter="none">Original</button>
+                </div>
+                <div class="mt-3">
+                    <a id="download-btn-filters" class="btn btn-success" style="display: none;">Download Image</a>
+                </div>
+            </div>
+
+            <!-- Text Overlay Tool -->
+            <div id="text-overlay-tool" class="tool-container">
+                <h3>Add Text Overlay</h3>
+                <div class="mb-3 drop-area">
+                    <label for="file-input-text-overlay" class="form-label">Select an image (or drop it here)</label>
+                    <input class="form-control" type="file" id="file-input-text-overlay" accept="image/*">
+                </div>
+                <div class="mb-3">
+                    <label for="overlay-text" class="form-label">Text to Overlay</label>
+                    <input type="text" class="form-control" id="overlay-text" placeholder="Your text here">
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="font-size" class="form-label">Font Size</label>
+                        <input type="number" class="form-control" id="font-size" value="30">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="font-color" class="form-label">Font Color</label>
+                        <input type="color" class="form-control form-control-color" id="font-color" value="#000000">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="pos-x" class="form-label">Position X</label>
+                        <input type="number" class="form-control" id="pos-x" value="10">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="pos-y" class="form-label">Position Y</label>
+                        <input type="number" class="form-control" id="pos-y" value="50">
+                    </div>
+                </div>
+                <canvas id="canvas-text-overlay" class="mt-3 img-fluid"></canvas>
+                <div class="mt-3">
+                    <button id="apply-text-overlay-btn" class="btn btn-primary">Apply Text</button>
+                    <a id="download-btn-text-overlay" class="btn btn-success" style="display: none;">Download Image</a>
+                </div>
+            </div>
+
+            <!-- Color Adjustments Tool -->
+            <div id="color-adjustments-tool" class="tool-container">
+                <h3>Adjust Colors</h3>
+                <div class="mb-3 drop-area">
+                    <label for="file-input-color-adjustments" class="form-label">Select an image (or drop it here)</label>
+                    <input class="form-control" type="file" id="file-input-color-adjustments" accept="image/*">
+                </div>
+                <canvas id="canvas-color-adjustments" class="mt-3 img-fluid"></canvas>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label for="brightness-range" class="form-label">Brightness: <span id="brightness-value">100%</span></label>
+                        <input type="range" class="form-range" id="brightness-range" min="0" max="200" value="100">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="contrast-range" class="form-label">Contrast: <span id="contrast-value">100%</span></label>
+                        <input type="range" class="form-range" id="contrast-range" min="0" max="200" value="100">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label for="saturation-range" class="form-label">Saturation: <span id="saturation-value">100%</span></label>
+                        <input type="range" class="form-range" id="saturation-range" min="0" max="200" value="100">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="hue-rotate-range" class="form-label">Hue Rotate: <span id="hue-rotate-value">0deg</span></label>
+                        <input type="range" class="form-range" id="hue-rotate-range" min="0" max="360" value="0">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button id="reset-color-adjustments-btn" class="btn btn-secondary">Reset</button>
+                    <a id="download-btn-color-adjustments" class="btn btn-success" style="display: none;">Download Image</a>
+                </div>
+            </div>
+
+            <!-- Bulk Resize Tool -->
+            <div id="bulk-resize-tool" class="tool-container">
+                <h3>Bulk Resize Images</h3>
+                <div class="mb-3 drop-area">
+                    <label for="file-input-bulk-resize" class="form-label">Select multiple images (or drop them here)</label>
+                    <input class="form-control" type="file" id="file-input-bulk-resize" accept="image/*" multiple>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label for="bulk-width-input" class="form-label">Width</label>
+                        <input type="number" class="form-control" id="bulk-width-input" placeholder="e.g., 800">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="bulk-height-input" class="form-label">Height</label>
+                        <input type="number" class="form-control" id="bulk-height-input" placeholder="e.g., 600">
+                    </div>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="bulk-aspect-ratio-check" checked>
+                    <label class="form-check-label" for="bulk-aspect-ratio-check">
+                        Maintain aspect ratio
+                    </label>
+                </div>
+                <div class="mt-3">
+                    <button id="bulk-resize-btn" class="btn btn-primary">Resize All</button>
+                </div>
+                <div id="bulk-download-area" class="mt-3 row"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/drag-and-drop.js"></script>
+    <script src="js/resizer.js"></script>
+    <script src="js/converter.js"></script>
+    <script src="js/cropper.js"></script>
+    <script src="js/rotate.js"></script>
+    <script src="js/filters.js"></script>
+    <script src="js/text-overlay.js"></script>
+    <script src="js/color-adjustments.js"></script>
+    <script src="js/bulk-resize.js"></script>
+</body>
+</html>
