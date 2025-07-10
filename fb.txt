@@ -1,9 +1,0 @@
-here are some random thoughts
-
-1) when uploading a file, please add also drag and drop, not just upload windows (now it's present only in Resize)
-2) crop part is still showing nothing,blank page (still present)
-3) when resizing it would be great to have a box near the original image that shows the resized image before downloading  (still present)
-4) in all sections, all the buttons should be below the images (still present)
-5) in Resize, download button is missing	
-
-Please update gemini.md
