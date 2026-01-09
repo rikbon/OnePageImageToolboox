@@ -1,0 +1,19 @@
+# Gitignore for Image Toolbox
+
+# Node.js
+node_modules/
+npm-debug.log
+dist/
+coverage/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Gemini-related files
+gemini.md
+
+#Other
+fb.txt
