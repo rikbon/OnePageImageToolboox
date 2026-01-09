@@ -1,85 +1,108 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('file-input-resize');
-    const widthInput = document.getElementById('width-input');
-    const heightInput = document.getElementById('height-input');
-    const aspectRatioCheck = document.getElementById('aspect-ratio-check');
-    const resizeBtn = document.getElementById('resize-btn');
-    const downloadBtn = document.getElementById('download-btn-resize');
-    const imagePreview = document.getElementById('image-preview-resize');
-    const resizePreviewCanvas = document.getElementById('resize-preview-canvas');
-    const resizePreviewCtx = resizePreviewCanvas.getContext('2d');
+import { calculateTargetDimensions } from './utils.js';
 
-    let originalImage = null;
-    let originalWidth = 0;
-    let originalHeight = 0;
-    let aspectRatio = 1;
+export const ResizerTool = {
+    mount() {
+        this.fileInput = document.getElementById('file-input-resize');
+        this.widthInput = document.getElementById('width-input');
+        this.heightInput = document.getElementById('height-input');
+        this.aspectRatioCheck = document.getElementById('aspect-ratio-check');
+        this.resizeBtn = document.getElementById('resize-btn');
+        this.downloadBtn = document.getElementById('download-btn-resize');
+        this.imagePreview = document.getElementById('image-preview-resize');
+        this.resizePreviewCanvas = document.getElementById('resize-preview-canvas');
+        this.resizePreviewCtx = this.resizePreviewCanvas.getContext('2d');
 
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        this.originalImage = null;
+        this.originalWidth = 0;
+        this.originalHeight = 0;
+        this.aspectRatio = 1;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const img = new Image();
-            img.onload = () => {
-                originalImage = img;
-                originalWidth = img.width;
-                originalHeight = img.height;
-                aspectRatio = originalWidth / originalHeight;
-                widthInput.value = originalWidth;
-                heightInput.value = originalHeight;
-                imagePreview.src = event.target.result;
-                downloadBtn.style.display = 'none';
-                resizePreviewCanvas.style.display = 'none';
+        this.handleFileChange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    this.originalImage = img;
+                    this.originalWidth = img.width;
+                    this.originalHeight = img.height;
+                    this.aspectRatio = this.originalWidth / this.originalHeight;
+                    this.widthInput.value = this.originalWidth;
+                    this.heightInput.value = this.originalHeight;
+                    this.imagePreview.src = event.target.result;
+                    this.downloadBtn.style.display = 'none';
+                    this.resizePreviewCanvas.style.display = 'none';
+                };
+                img.src = event.target.result;
             };
-            img.src = event.target.result;
+            reader.readAsDataURL(file);
         };
-        reader.readAsDataURL(file);
-    });
 
-    widthInput.addEventListener('input', () => {
-        if (aspectRatioCheck.checked) {
-            heightInput.value = Math.round(widthInput.value / aspectRatio);
+        this.handleWidthInput = () => {
+            if (this.aspectRatioCheck.checked) {
+                const { height } = calculateTargetDimensions(this.widthInput.value, this.heightInput.value, this.aspectRatio, 'width');
+                this.heightInput.value = height;
+            }
+        };
+
+        this.handleHeightInput = () => {
+            if (this.aspectRatioCheck.checked) {
+                const { width } = calculateTargetDimensions(this.widthInput.value, this.heightInput.value, this.aspectRatio, 'height');
+                this.widthInput.value = width;
+            }
+        };
+
+        this.handleResize = () => {
+            if (!this.originalImage) return;
+
+            const width = parseInt(this.widthInput.value);
+            const height = parseInt(this.heightInput.value);
+
+            if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+                alert('Please enter valid dimensions.');
+                return;
+            }
+
+            this.resizePreviewCanvas.width = width;
+            this.resizePreviewCanvas.height = height;
+            this.resizePreviewCtx.drawImage(this.originalImage, 0, 0, width, height);
+            this.resizePreviewCanvas.style.display = 'block';
+
+            this.resizePreviewCanvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                this.downloadBtn.href = url;
+                this.downloadBtn.download = 'resized-image.png';
+                this.downloadBtn.style.display = 'inline-block';
+            }, 'image/png');
+        };
+
+        this.fileInput.addEventListener('change', this.handleFileChange);
+        this.widthInput.addEventListener('input', this.handleWidthInput);
+        this.heightInput.addEventListener('input', this.handleHeightInput);
+        this.resizeBtn.addEventListener('click', this.handleResize);
+    },
+
+    unmount() {
+        if (this.fileInput) {
+            this.fileInput.removeEventListener('change', this.handleFileChange);
+            this.fileInput.value = '';
         }
-    });
-
-    heightInput.addEventListener('input', () => {
-        if (aspectRatioCheck.checked) {
-            widthInput.value = Math.round(heightInput.value * aspectRatio);
+        if (this.widthInput) {
+            this.widthInput.removeEventListener('input', this.handleWidthInput);
+            this.widthInput.value = '';
         }
-    });
-
-    resizeBtn.addEventListener('click', () => {
-        if (!originalImage) return;
-
-        const width = parseInt(widthInput.value);
-        const height = parseInt(heightInput.value);
-
-        if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
-            alert('Please enter valid dimensions.');
-            return;
+        if (this.heightInput) {
+            this.heightInput.removeEventListener('input', this.handleHeightInput);
+            this.heightInput.value = '';
         }
+        if (this.resizeBtn) this.resizeBtn.removeEventListener('click', this.handleResize);
 
-        resizePreviewCanvas.width = width;
-        resizePreviewCanvas.height = height;
-        resizePreviewCtx.drawImage(originalImage, 0, 0, width, height);
-        resizePreviewCanvas.style.display = 'block';
+        if (this.imagePreview) this.imagePreview.src = '';
+        if (this.resizePreviewCanvas) this.resizePreviewCanvas.style.display = 'none';
+        if (this.downloadBtn) this.downloadBtn.style.display = 'none';
 
-        resizePreviewCanvas.toBlob((blob) => {
-            const url = URL.createObjectURL(blob);
-            downloadBtn.href = url;
-            downloadBtn.download = 'resized-image.png';
-            downloadBtn.style.display = 'inline-block';
-        }, 'image/png');
-    });
-
-    window.clearResizer = () => {
-        fileInput.value = '';
-        imagePreview.src = '';
-        resizePreviewCanvas.style.display = 'none';
-        downloadBtn.style.display = 'none';
-        widthInput.value = '';
-        heightInput.value = '';
-        originalImage = null;
-    };
-});
+        this.originalImage = null;
+    }
+};

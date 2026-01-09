@@ -1,4 +1,5 @@
-document.addEventListener('DOMContentLoaded', () => {
+
+export function initDragAndDrop() {
     const dropAreas = document.querySelectorAll('.drop-area');
 
     dropAreas.forEach(dropArea => {
@@ -23,4 +24,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-});
+}

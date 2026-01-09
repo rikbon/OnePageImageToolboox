@@ -1,58 +1,77 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('file-input-crop');
-    const cropBtn = document.getElementById('crop-btn');
-    const downloadBtn = document.getElementById('download-btn-crop');
-    const imagePreview = document.getElementById('image-preview-crop');
 
-    let cropper = null;
+import Cropper from 'cropperjs';
+import 'cropperjs/dist/cropper.css';
 
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+export const CropperTool = {
+    mount() {
+        this.fileInput = document.getElementById('file-input-crop');
+        this.cropBtn = document.getElementById('crop-btn');
+        this.downloadBtn = document.getElementById('download-btn-crop');
+        this.imagePreview = document.getElementById('image-preview-crop');
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            imagePreview.src = event.target.result;
-            imagePreview.style.display = 'block';
-            cropBtn.style.display = 'inline-block';
-            downloadBtn.style.display = 'none';
+        this.cropper = null;
 
-            if (cropper) {
-                cropper.destroy();
-            }
+        this.handleFileChange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-            // Initialize cropper after image is loaded and displayed
-            imagePreview.onload = () => {
-                cropper = new Cropper(imagePreview, {
-                    aspectRatio: NaN, // Free crop
-                    viewMode: 1,
-                });
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                this.imagePreview.src = event.target.result;
+                this.imagePreview.style.display = 'block';
+                this.cropBtn.style.display = 'inline-block';
+                this.downloadBtn.style.display = 'none';
+
+                if (this.cropper) {
+                    this.cropper.destroy();
+                }
+
+                // Initialize cropper after image is loaded and displayed
+                this.imagePreview.onload = () => {
+                    this.cropper = new Cropper(this.imagePreview, {
+                        aspectRatio: NaN, // Free crop
+                        viewMode: 1,
+                    });
+                };
             };
+            reader.readAsDataURL(file);
         };
-        reader.readAsDataURL(file);
-    });
 
-    cropBtn.addEventListener('click', () => {
-        if (!cropper) return;
+        this.handleCrop = () => {
+            if (!this.cropper) return;
 
-        const canvas = cropper.getCroppedCanvas();
-        canvas.toBlob((blob) => {
-            const url = URL.createObjectURL(blob);
-            downloadBtn.href = url;
-            downloadBtn.download = 'cropped-image.png';
-            downloadBtn.style.display = 'inline-block';
-        });
-    });
+            const canvas = this.cropper.getCroppedCanvas();
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                this.downloadBtn.href = url;
+                this.downloadBtn.download = 'cropped-image.png';
+                this.downloadBtn.style.display = 'inline-block';
+            });
+        };
 
-    window.clearCropper = () => {
-        fileInput.value = '';
-        imagePreview.src = '';
-        imagePreview.style.display = 'none';
-        cropBtn.style.display = 'none';
-        downloadBtn.style.display = 'none';
-        if (cropper) {
-            cropper.destroy();
-            cropper = null;
+        this.fileInput.addEventListener('change', this.handleFileChange);
+        this.cropBtn.addEventListener('click', this.handleCrop);
+    },
+
+    unmount() {
+        if (this.fileInput) {
+            this.fileInput.removeEventListener('change', this.handleFileChange);
+            this.fileInput.value = '';
         }
-    };
-});
+        if (this.cropBtn) {
+            this.cropBtn.removeEventListener('click', this.handleCrop);
+            this.cropBtn.style.display = 'none';
+        }
+
+        if (this.imagePreview) {
+            this.imagePreview.src = '';
+            this.imagePreview.style.display = 'none';
+        }
+        if (this.downloadBtn) this.downloadBtn.style.display = 'none';
+
+        if (this.cropper) {
+            this.cropper.destroy();
+            this.cropper = null;
+        }
+    }
+};

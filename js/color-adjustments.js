@@ -1,78 +1,100 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('file-input-color-adjustments');
-    const canvas = document.getElementById('canvas-color-adjustments');
-    const ctx = canvas.getContext('2d');
-    const brightnessRange = document.getElementById('brightness-range');
-    const contrastRange = document.getElementById('contrast-range');
-    const saturationRange = document.getElementById('saturation-range');
-    const hueRotateRange = document.getElementById('hue-rotate-range');
-    const brightnessValue = document.getElementById('brightness-value');
-    const contrastValue = document.getElementById('contrast-value');
-    const saturationValue = document.getElementById('saturation-value');
-    const hueRotateValue = document.getElementById('hue-rotate-value');
-    const resetBtn = document.getElementById('reset-color-adjustments-btn');
-    const downloadBtn = document.getElementById('download-btn-color-adjustments');
 
-    let originalImage = null;
+export const ColorAdjustmentsTool = {
+    mount() {
+        this.fileInput = document.getElementById('file-input-color-adjustments');
+        this.canvas = document.getElementById('canvas-color-adjustments');
+        this.ctx = this.canvas.getContext('2d');
+        this.brightnessRange = document.getElementById('brightness-range');
+        this.contrastRange = document.getElementById('contrast-range');
+        this.saturationRange = document.getElementById('saturation-range');
+        this.hueRotateRange = document.getElementById('hue-rotate-range');
+        this.brightnessValue = document.getElementById('brightness-value');
+        this.contrastValue = document.getElementById('contrast-value');
+        this.saturationValue = document.getElementById('saturation-value');
+        this.hueRotateValue = document.getElementById('hue-rotate-value');
+        this.resetBtn = document.getElementById('reset-color-adjustments-btn');
+        this.downloadBtn = document.getElementById('download-btn-color-adjustments');
 
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        this.originalImage = null;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            originalImage = new Image();
-            originalImage.onload = () => {
-                canvas.width = originalImage.width;
-                canvas.height = originalImage.height;
-                resetAdjustments();
-                downloadBtn.style.display = 'none';
-            };
-            originalImage.src = event.target.result;
+        this.applyAdjustments = () => {
+            if (!this.originalImage) return;
+
+            const brightness = this.brightnessRange.value;
+            const contrast = this.contrastRange.value;
+            const saturation = this.saturationRange.value;
+            const hueRotate = this.hueRotateRange.value;
+
+            this.ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hueRotate}deg)`;
+            this.ctx.drawImage(this.originalImage, 0, 0);
+
+            this.brightnessValue.textContent = `${brightness}%`;
+            this.contrastValue.textContent = `${contrast}%`;
+            this.saturationValue.textContent = `${saturation}%`;
+            this.hueRotateValue.textContent = `${hueRotate}deg`;
+
+            this.downloadBtn.href = this.canvas.toDataURL('image/png');
+            this.downloadBtn.download = 'adjusted-image.png';
+            this.downloadBtn.style.display = 'inline-block';
         };
-        reader.readAsDataURL(file);
-    });
 
-    function applyAdjustments() {
-        if (!originalImage) return;
+        this.resetAdjustments = () => {
+            this.brightnessRange.value = 100;
+            this.contrastRange.value = 100;
+            this.saturationRange.value = 100;
+            this.hueRotateRange.value = 0;
+            this.applyAdjustments();
+        };
 
-        const brightness = brightnessRange.value;
-        const contrast = contrastRange.value;
-        const saturation = saturationRange.value;
-        const hueRotate = hueRotateRange.value;
+        this.handleFileChange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) hue-rotate(${hueRotate}deg)`;
-        ctx.drawImage(originalImage, 0, 0);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                this.originalImage = new Image();
+                this.originalImage.onload = () => {
+                    this.canvas.width = this.originalImage.width;
+                    this.canvas.height = this.originalImage.height;
+                    this.resetAdjustments();
+                    this.downloadBtn.style.display = 'none';
+                };
+                this.originalImage.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
 
-        brightnessValue.textContent = `${brightness}%`;
-        contrastValue.textContent = `${contrast}%`;
-        saturationValue.textContent = `${saturation}%`;
-        hueRotateValue.textContent = `${hueRotate}deg`;
+        this.fileInput.addEventListener('change', this.handleFileChange);
+        this.brightnessRange.addEventListener('input', this.applyAdjustments);
+        this.contrastRange.addEventListener('input', this.applyAdjustments);
+        this.saturationRange.addEventListener('input', this.applyAdjustments);
+        this.hueRotateRange.addEventListener('input', this.applyAdjustments);
+        this.resetBtn.addEventListener('click', this.resetAdjustments);
+    },
 
-        downloadBtn.href = canvas.toDataURL('image/png');
-        downloadBtn.download = 'adjusted-image.png';
-        downloadBtn.style.display = 'inline-block';
+    unmount() {
+        if (this.fileInput) {
+            this.fileInput.removeEventListener('change', this.handleFileChange);
+            this.fileInput.value = '';
+        }
+        if (this.brightnessRange) this.brightnessRange.removeEventListener('input', this.applyAdjustments);
+        if (this.contrastRange) this.contrastRange.removeEventListener('input', this.applyAdjustments);
+        if (this.saturationRange) this.saturationRange.removeEventListener('input', this.applyAdjustments);
+        if (this.hueRotateRange) this.hueRotateRange.removeEventListener('input', this.applyAdjustments);
+        if (this.resetBtn) this.resetBtn.removeEventListener('click', this.resetAdjustments);
+
+        this.originalImage = null;
+        if (this.ctx) this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        if (this.downloadBtn) this.downloadBtn.style.display = 'none';
+
+        // Reset sliders but don't call applyAdjustments since canvas is cleared
+        if (this.brightnessRange) this.brightnessRange.value = 100;
+        if (this.contrastRange) this.contrastRange.value = 100;
+        if (this.saturationRange) this.saturationRange.value = 100;
+        if (this.hueRotateRange) this.hueRotateRange.value = 0;
+        if (this.brightnessValue) this.brightnessValue.textContent = '100%';
+        if (this.contrastValue) this.contrastValue.textContent = '100%';
+        if (this.saturationValue) this.saturationValue.textContent = '100%';
+        if (this.hueRotateValue) this.hueRotateValue.textContent = '0deg';
     }
-
-    function resetAdjustments() {
-        brightnessRange.value = 100;
-        contrastRange.value = 100;
-        saturationRange.value = 100;
-        hueRotateRange.value = 0;
-        applyAdjustments();
-    }
-
-    brightnessRange.addEventListener('input', applyAdjustments);
-    contrastRange.addEventListener('input', applyAdjustments);
-    saturationRange.addEventListener('input', applyAdjustments);
-    hueRotateRange.addEventListener('input', applyAdjustments);
-    resetBtn.addEventListener('click', resetAdjustments);
-
-    window.clearColorAdjustments = () => {
-        fileInput.value = '';
-        originalImage = null;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        downloadBtn.style.display = 'none';
-        resetAdjustments(); // Reset sliders and values
-    };
-});
+};

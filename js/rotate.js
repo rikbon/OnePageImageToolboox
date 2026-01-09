@@ -1,90 +1,107 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('file-input-rotate');
-    const rotateLeftBtn = document.getElementById('rotate-left-btn');
-    const rotateRightBtn = document.getElementById('rotate-right-btn');
-    const flipHorizontalBtn = document.getElementById('flip-horizontal-btn');
-    const flipVerticalBtn = document.getElementById('flip-vertical-btn');
-    const downloadBtn = document.getElementById('download-btn-rotate');
-    const canvas = document.getElementById('canvas-rotate');
-    const ctx = canvas.getContext('2d');
 
-    let image = null;
-    let rotation = 0;
-    let scaleX = 1;
-    let scaleY = 1;
+export const RotateTool = {
+    mount() {
+        this.fileInput = document.getElementById('file-input-rotate');
+        this.rotateLeftBtn = document.getElementById('rotate-left-btn');
+        this.rotateRightBtn = document.getElementById('rotate-right-btn');
+        this.flipHorizontalBtn = document.getElementById('flip-horizontal-btn');
+        this.flipVerticalBtn = document.getElementById('flip-vertical-btn');
+        this.downloadBtn = document.getElementById('download-btn-rotate');
+        this.canvas = document.getElementById('canvas-rotate');
+        this.ctx = this.canvas.getContext('2d');
 
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        this.image = null;
+        this.rotation = 0;
+        this.scaleX = 1;
+        this.scaleY = 1;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            image = new Image();
-            image.onload = () => {
-                rotation = 0;
-                scaleX = 1;
-                scaleY = 1;
-                drawImage();
-                downloadBtn.style.display = 'inline-block';
-            };
-            image.src = event.target.result;
+        this.drawImage = () => {
+            if (!this.image) return;
+
+            const w = this.image.width;
+            const h = this.image.height;
+
+            // When rotating by 90 or 270, swap dimensions
+            if (this.rotation % 180 !== 0) {
+                this.canvas.width = h;
+                this.canvas.height = w;
+            } else {
+                this.canvas.width = w;
+                this.canvas.height = h;
+            }
+
+            this.ctx.save();
+            this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
+            this.ctx.rotate(this.rotation * Math.PI / 180);
+            this.ctx.scale(this.scaleX, this.scaleY);
+            this.ctx.drawImage(this.image, -w / 2, -h / 2);
+            this.ctx.restore();
+
+            this.downloadBtn.href = this.canvas.toDataURL('image/png');
+            this.downloadBtn.download = 'rotated-image.png';
         };
-        reader.readAsDataURL(file);
-    });
 
-    function drawImage() {
-        if (!image) return;
+        this.handleFileChange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        const w = image.width;
-        const h = image.height;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                this.image = new Image();
+                this.image.onload = () => {
+                    this.rotation = 0;
+                    this.scaleX = 1;
+                    this.scaleY = 1;
+                    this.drawImage();
+                    this.downloadBtn.style.display = 'inline-block';
+                };
+                this.image.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
 
-        // When rotating by 90 or 270, swap dimensions
-        if (rotation % 180 !== 0) {
-            canvas.width = h;
-            canvas.height = w;
-        } else {
-            canvas.width = w;
-            canvas.height = h;
+        this.handleRotateLeft = () => {
+            this.rotation = (this.rotation - 90) % 360;
+            this.drawImage();
+        };
+
+        this.handleRotateRight = () => {
+            this.rotation = (this.rotation + 90) % 360;
+            this.drawImage();
+        };
+
+        this.handleFlipHorizontal = () => {
+            this.scaleX *= -1;
+            this.drawImage();
+        };
+
+        this.handleFlipVertical = () => {
+            this.scaleY *= -1;
+            this.drawImage();
+        };
+
+        this.fileInput.addEventListener('change', this.handleFileChange);
+        this.rotateLeftBtn.addEventListener('click', this.handleRotateLeft);
+        this.rotateRightBtn.addEventListener('click', this.handleRotateRight);
+        this.flipHorizontalBtn.addEventListener('click', this.handleFlipHorizontal);
+        this.flipVerticalBtn.addEventListener('click', this.handleFlipVertical);
+    },
+
+    unmount() {
+        if (this.fileInput) {
+            this.fileInput.removeEventListener('change', this.handleFileChange);
+            this.fileInput.value = '';
         }
+        if (this.rotateLeftBtn) this.rotateLeftBtn.removeEventListener('click', this.handleRotateLeft);
+        if (this.rotateRightBtn) this.rotateRightBtn.removeEventListener('click', this.handleRotateRight);
+        if (this.flipHorizontalBtn) this.flipHorizontalBtn.removeEventListener('click', this.handleFlipHorizontal);
+        if (this.flipVerticalBtn) this.flipVerticalBtn.removeEventListener('click', this.handleFlipVertical);
 
-        ctx.save();
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(rotation * Math.PI / 180);
-        ctx.scale(scaleX, scaleY);
-        ctx.drawImage(image, -w / 2, -h / 2);
-        ctx.restore();
-
-        downloadBtn.href = canvas.toDataURL('image/png');
-        downloadBtn.download = 'rotated-image.png';
+        this.image = null;
+        this.rotation = 0;
+        this.scaleX = 1;
+        this.scaleY = 1;
+        if (this.ctx) this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        if (this.downloadBtn) this.downloadBtn.style.display = 'none';
     }
-
-    rotateLeftBtn.addEventListener('click', () => {
-        rotation = (rotation - 90) % 360;
-        drawImage();
-    });
-
-    rotateRightBtn.addEventListener('click', () => {
-        rotation = (rotation + 90) % 360;
-        drawImage();
-    });
-
-    flipHorizontalBtn.addEventListener('click', () => {
-        scaleX *= -1;
-        drawImage();
-    });
-
-    flipVerticalBtn.addEventListener('click', () => {
-        scaleY *= -1;
-        drawImage();
-    });
-
-    window.clearRotate = () => {
-        fileInput.value = '';
-        image = null;
-        rotation = 0;
-        scaleX = 1;
-        scaleY = 1;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        downloadBtn.style.display = 'none';
-    };
-});
+};

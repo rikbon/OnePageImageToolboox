@@ -1,64 +1,77 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('file-input-filters');
-    const filterButtons = document.getElementById('filter-buttons');
-    const downloadBtn = document.getElementById('download-btn-filters');
-    const canvas = document.getElementById('canvas-filters');
-    const ctx = canvas.getContext('2d');
 
-    let image = null;
+export const FiltersTool = {
+    mount() {
+        this.fileInput = document.getElementById('file-input-filters');
+        this.filterButtons = document.getElementById('filter-buttons');
+        this.downloadBtn = document.getElementById('download-btn-filters');
+        this.canvas = document.getElementById('canvas-filters');
+        this.ctx = this.canvas.getContext('2d');
 
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        this.image = null;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            image = new Image();
-            image.onload = () => {
-                canvas.width = image.width;
-                canvas.height = image.height;
-                applyFilter('none');
-                downloadBtn.style.display = 'inline-block';
-            };
-            image.src = event.target.result;
+        this.applyFilter = (filter) => {
+            if (!this.image) return;
+
+            this.ctx.filter = 'none';
+            switch (filter) {
+                case 'grayscale':
+                    this.ctx.filter = 'grayscale(100%)';
+                    break;
+                case 'sepia':
+                    this.ctx.filter = 'sepia(100%)';
+                    break;
+                case 'invert':
+                    this.ctx.filter = 'invert(100%)';
+                    break;
+            }
+
+            this.ctx.drawImage(this.image, 0, 0);
+
+            this.downloadBtn.href = this.canvas.toDataURL('image/png');
+            this.downloadBtn.download = `filtered-image-${filter}.png`;
         };
-        reader.readAsDataURL(file);
-    });
 
-    filterButtons.addEventListener('click', (e) => {
-        if (e.target.classList.contains('filter-btn')) {
-            const filter = e.target.dataset.filter;
-            applyFilter(filter);
+        this.handleFileChange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                this.image = new Image();
+                this.image.onload = () => {
+                    this.canvas.width = this.image.width;
+                    this.canvas.height = this.image.height;
+                    this.applyFilter('none');
+                    this.downloadBtn.style.display = 'inline-block';
+                };
+                this.image.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        this.handleFilterClick = (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                const filter = e.target.dataset.filter;
+                this.applyFilter(filter);
+            }
+        };
+
+        this.fileInput.addEventListener('change', this.handleFileChange);
+        this.filterButtons.addEventListener('click', this.handleFilterClick);
+    },
+
+    unmount() {
+        if (this.fileInput) {
+            this.fileInput.removeEventListener('change', this.handleFileChange);
+            this.fileInput.value = '';
         }
-    });
+        if (this.filterButtons) this.filterButtons.removeEventListener('click', this.handleFilterClick);
 
-    function applyFilter(filter) {
-        if (!image) return;
-
-        ctx.filter = 'none';
-        switch (filter) {
-            case 'grayscale':
-                ctx.filter = 'grayscale(100%)';
-                break;
-            case 'sepia':
-                ctx.filter = 'sepia(100%)';
-                break;
-            case 'invert':
-                ctx.filter = 'invert(100%)';
-                break;
+        this.image = null;
+        if (this.ctx) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.filter = 'none';
         }
-
-        ctx.drawImage(image, 0, 0);
-
-        downloadBtn.href = canvas.toDataURL('image/png');
-        downloadBtn.download = `filtered-image-${filter}.png`;
+        if (this.downloadBtn) this.downloadBtn.style.display = 'none';
     }
-
-    window.clearFilters = () => {
-        fileInput.value = '';
-        image = null;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        downloadBtn.style.display = 'none';
-        ctx.filter = 'none'; // Reset filter
-    };
-});
+};

@@ -1,65 +1,77 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('file-input-text-overlay');
-    const overlayText = document.getElementById('overlay-text');
-    const fontSizeInput = document.getElementById('font-size');
-    const fontColorInput = document.getElementById('font-color');
-    const posXInput = document.getElementById('pos-x');
-    const posYInput = document.getElementById('pos-y');
-    const applyTextBtn = document.getElementById('apply-text-overlay-btn');
-    const downloadBtn = document.getElementById('download-btn-text-overlay');
-    const canvas = document.getElementById('canvas-text-overlay');
-    const ctx = canvas.getContext('2d');
 
-    let originalImage = null;
+export const TextOverlayTool = {
+    mount() {
+        this.fileInput = document.getElementById('file-input-text-overlay');
+        this.overlayText = document.getElementById('overlay-text');
+        this.fontSizeInput = document.getElementById('font-size');
+        this.fontColorInput = document.getElementById('font-color');
+        this.posXInput = document.getElementById('pos-x');
+        this.posYInput = document.getElementById('pos-y');
+        this.applyTextBtn = document.getElementById('apply-text-overlay-btn');
+        this.downloadBtn = document.getElementById('download-btn-text-overlay');
+        this.canvas = document.getElementById('canvas-text-overlay');
+        this.ctx = this.canvas.getContext('2d');
 
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        this.originalImage = null;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            originalImage = new Image();
-            originalImage.onload = () => {
-                canvas.width = originalImage.width;
-                canvas.height = originalImage.height;
-                ctx.drawImage(originalImage, 0, 0);
-                downloadBtn.style.display = 'none';
+        this.handleFileChange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                this.originalImage = new Image();
+                this.originalImage.onload = () => {
+                    this.canvas.width = this.originalImage.width;
+                    this.canvas.height = this.originalImage.height;
+                    this.ctx.drawImage(this.originalImage, 0, 0);
+                    this.downloadBtn.style.display = 'none';
+                };
+                this.originalImage.src = event.target.result;
             };
-            originalImage.src = event.target.result;
+            reader.readAsDataURL(file);
         };
-        reader.readAsDataURL(file);
-    });
 
-    applyTextBtn.addEventListener('click', () => {
-        if (!originalImage) return;
+        this.handleApplyText = () => {
+            if (!this.originalImage) return;
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(originalImage, 0, 0);
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.drawImage(this.originalImage, 0, 0);
 
-        const text = overlayText.value;
-        const fontSize = fontSizeInput.value;
-        const fontColor = fontColorInput.value;
-        const posX = parseInt(posXInput.value);
-        const posY = parseInt(posYInput.value);
+            const text = this.overlayText.value;
+            const fontSize = this.fontSizeInput.value;
+            const fontColor = this.fontColorInput.value;
+            const posX = parseInt(this.posXInput.value);
+            const posY = parseInt(this.posYInput.value);
 
-        ctx.font = `${fontSize}px Arial`;
-        ctx.fillStyle = fontColor;
-        ctx.fillText(text, posX, posY);
+            this.ctx.font = `${fontSize}px Arial`;
+            this.ctx.fillStyle = fontColor;
+            this.ctx.fillText(text, posX, posY);
 
-        downloadBtn.href = canvas.toDataURL('image/png');
-        downloadBtn.download = 'image-with-text.png';
-        downloadBtn.style.display = 'inline-block';
-    });
+            this.downloadBtn.href = this.canvas.toDataURL('image/png');
+            this.downloadBtn.download = 'image-with-text.png';
+            this.downloadBtn.style.display = 'inline-block';
+        };
 
-    window.clearTextOverlay = () => {
-        fileInput.value = '';
-        overlayText.value = '';
-        fontSizeInput.value = 30;
-        fontColorInput.value = '#000000';
-        posXInput.value = 10;
-        posYInput.value = 50;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        downloadBtn.style.display = 'none';
-        originalImage = null;
-    };
-});
+        this.fileInput.addEventListener('change', this.handleFileChange);
+        this.applyTextBtn.addEventListener('click', this.handleApplyText);
+    },
+
+    unmount() {
+        if (this.fileInput) {
+            this.fileInput.removeEventListener('change', this.handleFileChange);
+            this.fileInput.value = '';
+        }
+        if (this.applyTextBtn) this.applyTextBtn.removeEventListener('click', this.handleApplyText);
+
+        if (this.overlayText) this.overlayText.value = '';
+        if (this.fontSizeInput) this.fontSizeInput.value = 30;
+        if (this.fontColorInput) this.fontColorInput.value = '#000000';
+        if (this.posXInput) this.posXInput.value = 10;
+        if (this.posYInput) this.posYInput.value = 50;
+        if (this.ctx) this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        if (this.downloadBtn) this.downloadBtn.style.display = 'none';
+
+        this.originalImage = null;
+    }
+};
