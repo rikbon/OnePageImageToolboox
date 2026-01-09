@@ -1,11 +1,13 @@
-# Use a lightweight Nginx image as the base
-FROM nginx:alpine
+# Build stage
+FROM node:18-alpine as build-stage
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
 
-# Copy the application files into the Nginx web root
-COPY . /usr/share/nginx/html
-
-# Expose port 8080
-EXPOSE 8080
-
-# Nginx serves content from /usr/share/nginx/html by default
-# No CMD needed as Nginx base image already runs Nginx
+# Production stage
+FROM nginx:alpine as production-stage
+COPY --from=build-stage /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
